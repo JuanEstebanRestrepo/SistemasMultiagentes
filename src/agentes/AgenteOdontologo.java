@@ -15,8 +15,6 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import java.util.Hashtable;
-import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import ontologia.*;
@@ -53,9 +51,42 @@ public class AgenteOdontologo extends Agent {
         //Agregar comportamientos 
         this.addBehaviour(new ProtocoloUsuario());
         //this.addBehaviour(new RegistrarUsuario());
-        this.addBehaviour(new EsperarSolicitudNotificacion());
-        this.addBehaviour(new EsperarConfirmacion());
-        this.addBehaviour(new EsperarSolicitudDiagnostico());
+        //this.addBehaviour(new EsperarSolicitudNotificacion());
+        //this.addBehaviour(new EsperarConfirmacion());
+        //this.addBehaviour(new EsperarSolicitudDiagnostico());
+    }
+
+    private class DarDiagnostico extends OneShotBehaviour {
+
+        private Diagnostico diagnostico;
+
+        public DarDiagnostico(Diagnostico diagnostico) {
+            this.diagnostico = diagnostico;
+        }
+
+        @Override
+        public void action() {
+            diagnostico = (Diagnostico) baseDatos.buscarPatologia(diagnostico);
+            try {
+                ACLMessage mensaje = new ACLMessage();
+                AID id = new AID();
+                id.setLocalName("AgenteUsuario");
+                mensaje.addReceiver(id);
+                mensaje.setLanguage(codec.getName());
+                mensaje.setOntology(ontologia.getName());
+                mensaje.setPerformative(ACLMessage.INFORM);
+                if (diagnostico != null) {
+                    DiagnosticoDado diagnosticoDado = new DiagnosticoDado();
+                    diagnosticoDado.setDiagnostico(diagnostico);
+                    getContentManager().fillContent(mensaje, diagnosticoDado);
+                }
+                this.myAgent.send(mensaje);
+            } catch (Codec.CodecException ex) {
+                Logger.getLogger(AgenteOdontologo.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (OntologyException ex) {
+                Logger.getLogger(AgenteOdontologo.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     private class BuscarUsuario extends OneShotBehaviour {
@@ -115,6 +146,10 @@ public class AgenteOdontologo extends Agent {
                         UsuarioABuscar usuasrioABuscar = (UsuarioABuscar) ce;
                         Usuario usuario = usuasrioABuscar.getUsuario();
                         this.myAgent.addBehaviour(new BuscarUsuario(usuario));
+                    } else if (ce instanceof DiagnosticoCreado) {
+                        DiagnosticoCreado diagnosticoCreado = (DiagnosticoCreado) ce;
+                        Diagnostico diagnostico = diagnosticoCreado.getDiagnostico();
+                        this.myAgent.addBehaviour(new DarDiagnostico(diagnostico));
                     }
 
                 } catch (Codec.CodecException ex) {
@@ -160,31 +195,6 @@ public class AgenteOdontologo extends Agent {
         }
     }
 
-    private class RegistrarUsuario extends CyclicBehaviour {
-
-        @Override
-        public void action() {
-
-            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.CONFIRM);
-            ACLMessage msg = myAgent.receive(mt);
-            if (msg != null) {
-                String[] usuario = msg.getContent().split(",");
-                ConexionDB holi = new ConexionDB();
-                holi.connect();
-                //holi.saveUsuario(usuario[0],usuario[1]);
-                holi.close();
-                System.out.println("Conexión cerrada \n");
-                ACLMessage reply = msg.createReply();
-                reply.setPerformative(ACLMessage.CFP);
-                reply.setContent("Usuario registrado");
-                myAgent.send(reply);
-                myAgent.doDelete();
-            } else {
-                block();
-            }
-        }
-    }
-
     private class EsperarConfirmacion extends CyclicBehaviour {
 
         @Override
@@ -220,9 +230,9 @@ public class AgenteOdontologo extends Agent {
 
                 ConexionDB holo = new ConexionDB();
                 holo.connect();
-                String nombre = holo.buscarPatologia(sintomas[0], sintomas[1], sintomas[2]);
+//                String nombre = holo.buscarPatologia(sintomas[0], sintomas[1], sintomas[2]);
                 holo.close();
-
+                /*
                 if (nombre != null) {
                     reply.setPerformative(ACLMessage.PROPOSE);
                     reply.setContent(nombre);
@@ -231,6 +241,7 @@ public class AgenteOdontologo extends Agent {
                     System.out.println("Diagnóstico no hencontrado");
                     reply.setContent("Diagnóstico no encontrado");
                 }
+                 */
                 myAgent.send(reply);
             } else {
                 block();

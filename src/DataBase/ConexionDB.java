@@ -145,22 +145,28 @@ public class ConexionDB {
         }
     }
 
-    public String buscarPatologia(String x, String y, String z) {
-        ResultSet result = null;
-
+    public Object buscarPatologia(Diagnostico diagnostico) {
         try {
-            PreparedStatement st = connect.prepareStatement("select * from patologias");
-            result = st.executeQuery();
+            connect();
+            String sql = "SELECT * FROM patologias WHERE sintoma1 IN ('"+diagnostico.getSintoma1()+"','"
+                    + diagnostico.getSintoma2()+ "','"+diagnostico.getSintoma3()+"') and "
+                    + "sintoma2 IN ('"+diagnostico.getSintoma1()+"','"
+                    + diagnostico.getSintoma2()+ "','"+diagnostico.getSintoma3()+"') and "
+                    + "sintoma3 IN ('"+diagnostico.getSintoma1()+"','"
+                    + diagnostico.getSintoma2()+ "','"+diagnostico.getSintoma3()+"')";
+            ResultSet result = consulta.executeQuery(sql);
             while (result.next()) {
-
+                diagnostico.setPatologia(result.getString("nombre"));
+                return diagnostico;
+/*
                 if ((result.getString("sintoma1").equals(x) || result.getString("sintoma2").equals(x) || result.getString("sintoma3").equals(x))
                         && (result.getString("sintoma1").equals(y) || result.getString("sintoma2").equals(y) || result.getString("sintoma3").equals(y))
                         && (result.getString("sintoma1").equals(z) || result.getString("sintoma2").equals(z) || result.getString("sintoma3").equals(z))) {
                     return (result.getString("nombre"));
                 }
+*/
             }
-            System.out.print("Ninguna patología coincide con los sintomas ingresados \n \n");
-            AgenteUsuario.menu();
+            close();
         } catch (SQLException ex) {
             System.err.println(ex.getMessage());
         }

@@ -9,7 +9,7 @@ import jade.core.CaseInsensitiveString;
 
 /** file: SaludOntology.java
  * @author ontology bean generator
- * @version 2019/08/14, 21:41:54
+ * @version 2019/08/15, 09:58:39
  */
 public class SaludOntology extends jade.content.onto.Ontology  {
   //NAME
@@ -23,12 +23,21 @@ public class SaludOntology extends jade.content.onto.Ontology  {
 
 
    // VOCABULARY
+    public static final String DIAGNOSTICODADO_DIAGNOSTICO="diagnostico";
+    public static final String DIAGNOSTICODADO="DiagnosticoDado";
     public static final String USUARIOCREADO_USUARIO="usuario";
     public static final String USUARIOCREADO="UsuarioCreado";
+    public static final String DIAGNOSTICOCREADO_DIAGNOSTICO="diagnostico";
+    public static final String DIAGNOSTICOCREADO="DiagnosticoCreado";
     public static final String USUARIOENCONTRADO_USUARIO="usuario";
     public static final String USUARIOENCONTRADO="UsuarioEncontrado";
     public static final String USUARIOABUSCAR_USUARIO="usuario";
     public static final String USUARIOABUSCAR="UsuarioABuscar";
+    public static final String DIAGNOSTICO_SINTOMA3="sintoma3";
+    public static final String DIAGNOSTICO_SINTOMA1="sintoma1";
+    public static final String DIAGNOSTICO_SINTOMA2="sintoma2";
+    public static final String DIAGNOSTICO_PATOLOGIA="patologia";
+    public static final String DIAGNOSTICO="Diagnostico";
     public static final String USUARIO_NOMBRE="nombre";
     public static final String USUARIO_IDENTIFICACION="identificacion";
     public static final String USUARIO="Usuario";
@@ -43,6 +52,8 @@ public class SaludOntology extends jade.content.onto.Ontology  {
     // adding Concept(s)
     ConceptSchema usuarioSchema = new ConceptSchema(USUARIO);
     add(usuarioSchema, ontologia.Usuario.class);
+    ConceptSchema diagnosticoSchema = new ConceptSchema(DIAGNOSTICO);
+    add(diagnosticoSchema, ontologia.Diagnostico.class);
 
     // adding AgentAction(s)
 
@@ -53,16 +64,26 @@ public class SaludOntology extends jade.content.onto.Ontology  {
     add(usuarioABuscarSchema, ontologia.UsuarioABuscar.class);
     PredicateSchema usuarioEncontradoSchema = new PredicateSchema(USUARIOENCONTRADO);
     add(usuarioEncontradoSchema, ontologia.UsuarioEncontrado.class);
+    PredicateSchema diagnosticoCreadoSchema = new PredicateSchema(DIAGNOSTICOCREADO);
+    add(diagnosticoCreadoSchema, ontologia.DiagnosticoCreado.class);
     PredicateSchema usuarioCreadoSchema = new PredicateSchema(USUARIOCREADO);
     add(usuarioCreadoSchema, ontologia.UsuarioCreado.class);
+    PredicateSchema diagnosticoDadoSchema = new PredicateSchema(DIAGNOSTICODADO);
+    add(diagnosticoDadoSchema, ontologia.DiagnosticoDado.class);
 
 
     // adding fields
     usuarioSchema.add(USUARIO_IDENTIFICACION, (TermSchema)getSchema(BasicOntology.INTEGER), ObjectSchema.OPTIONAL);
     usuarioSchema.add(USUARIO_NOMBRE, (TermSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+    diagnosticoSchema.add(DIAGNOSTICO_PATOLOGIA, (TermSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+    diagnosticoSchema.add(DIAGNOSTICO_SINTOMA2, (TermSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+    diagnosticoSchema.add(DIAGNOSTICO_SINTOMA1, (TermSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+    diagnosticoSchema.add(DIAGNOSTICO_SINTOMA3, (TermSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
     usuarioABuscarSchema.add(USUARIOABUSCAR_USUARIO, usuarioSchema, ObjectSchema.OPTIONAL);
     usuarioEncontradoSchema.add(USUARIOENCONTRADO_USUARIO, usuarioSchema, ObjectSchema.OPTIONAL);
+    diagnosticoCreadoSchema.add(DIAGNOSTICOCREADO_DIAGNOSTICO, diagnosticoSchema, ObjectSchema.OPTIONAL);
     usuarioCreadoSchema.add(USUARIOCREADO_USUARIO, usuarioSchema, ObjectSchema.OPTIONAL);
+    diagnosticoDadoSchema.add(DIAGNOSTICODADO_DIAGNOSTICO, diagnosticoSchema, ObjectSchema.OPTIONAL);
 
     // adding name mappings
 

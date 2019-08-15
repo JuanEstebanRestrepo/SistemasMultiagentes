@@ -130,7 +130,7 @@ public class AgenteUsuario extends Agent {
         }
     }
 
-    private static class SolicitarDiagnostico extends OneShotBehaviour {
+    private class SolicitarDiagnostico extends OneShotBehaviour {
         Usuario usuario;
         public SolicitarDiagnostico(Usuario usuario) {
             this.usuario = usuario;
@@ -138,7 +138,36 @@ public class AgenteUsuario extends Agent {
 
         @Override
         public void action() {
-            System.out.println("Paciente: " + usuario.getNombre());
+            try {
+                Diagnostico diagnostico = new Diagnostico();
+                System.out.println("Paciente: " + usuario.getNombre());
+                System.out.println("\n-Ingrese sintoma 1");
+                String sintoma = buff.readLine();
+                diagnostico.setSintoma1(sintoma);
+                System.out.println("\n-Ingrese sintoma 2");
+                sintoma = buff.readLine();
+                diagnostico.setSintoma2(sintoma);
+                System.out.println("\n-Ingrese sintoma 3");
+                sintoma = buff.readLine();
+                diagnostico.setSintoma3(sintoma);
+                DiagnosticoCreado diagnosticoCreado = new DiagnosticoCreado();
+                diagnosticoCreado.setDiagnostico(diagnostico);
+                ACLMessage mensaje = new ACLMessage();
+                AID id = new AID();
+                id.setLocalName("AgenteOdontologo");
+                mensaje.addReceiver(id);
+                mensaje.setLanguage(codec.getName());
+                mensaje.setOntology(ontologia.getName());
+                mensaje.setPerformative(ACLMessage.INFORM);
+                getContentManager().fillContent(mensaje, diagnosticoCreado);
+                this.myAgent.send(mensaje);
+            } catch (IOException ex) {
+                Logger.getLogger(AgenteUsuario.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (Codec.CodecException ex) {
+                Logger.getLogger(AgenteUsuario.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (OntologyException ex) {
+                Logger.getLogger(AgenteUsuario.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -159,6 +188,12 @@ public class AgenteUsuario extends Agent {
                         UsuarioEncontrado usuarioEncontrado = (UsuarioEncontrado) ce;
                         Usuario usuario = usuarioEncontrado.getUsuario();
                         this.myAgent.addBehaviour(new SolicitarDiagnostico(usuario));
+                    } else if (ce instanceof DiagnosticoDado) {
+                        DiagnosticoDado diagnosticoDado = (DiagnosticoDado) ce;
+                        Diagnostico diagnostico = diagnosticoDado.getDiagnostico();
+                        System.out.println("El diagnóstico según los sintomas ingresados es: "
+                                + diagnostico.getPatologia());
+                        this.myAgent.addBehaviour(new Menu());
                     }
                 } catch (Codec.CodecException ex) {
                     Logger.getLogger(AgenteUsuario.class.getName()).log(Level.SEVERE, null, ex);
@@ -314,11 +349,7 @@ public class AgenteUsuario extends Agent {
                 ACLMessage pregunta = new ACLMessage();
                 pregunta.addReceiver(resultados[i].getName());
                 if (option.equals("Registrar usuario")) {
-                    pregunta.setContent(identificacion + "," + nombre);
-                    pregunta.addReceiver(new AID("Odontologo", AID.ISLOCALNAME));
-                    pregunta.setPerformative(ACLMessage.CONFIRM);
-                    send(pregunta);
-                    myAgent.addBehaviour(new EsperarNotificacionRegistro());
+                    
                 } else if (option.equals("Solicitar notificación")) {
                     pregunta.setContent(identificacion);
                     pregunta.addReceiver(new AID("Odontologo", AID.ISLOCALNAME));
@@ -341,23 +372,6 @@ public class AgenteUsuario extends Agent {
     }
 
     private class EsperarNotificacionPatologia extends CyclicBehaviour {
-
-        @Override
-        public void action() {
-
-            MessageTemplate cfp = MessageTemplate.MatchPerformative(ACLMessage.CFP);
-            ACLMessage msgcfp = myAgent.receive(cfp);
-            if (msgcfp != null) {
-                // CFP Message received. Process it
-                String valor = msgcfp.getContent();
-                System.out.println(valor);
-            } else {
-                block();
-            }
-        }
-    }
-
-    private class EsperarNotificacionRegistro extends CyclicBehaviour {
 
         @Override
         public void action() {
@@ -429,79 +443,18 @@ public class AgenteUsuario extends Agent {
     public static void menu() {
         Scanner entrada = new Scanner(System.in);
         int k;
-        System.out.println("------------------------------");
-        System.out.println("|--------  Salud  -----------|");
-        System.out.println("|---------  Menú  -----------|");
-        System.out.println("|  1. Registrar usuario      |");
-        System.out.println("|  2. Solicitar diagnóstico  |");
-        System.out.println("|  3. Solicitar notificacion |");
-        System.out.println("|  4. Agregar Patología      |");
-        System.out.println("|  5. Editar Patología       |");
-        System.out.println("------------------------------");
+        
         k = entrada.nextInt();
         if (k == 1) {
-            option = "Registrar usuario";
-            System.out.println("Ingrese los siguientes datos");
-            System.out.println("Identificacion");
-            cc = entrada.next();
-            System.out.println("Nombre");
-            nombre = entrada.next();
+            
         } else if (k == 2) {
-            option = "Solicitar diagnóstico";
-            System.out.println("-Ingrese identificacion del paciente:");
-            cc = entrada.next();
-            ConexionDB holi = new ConexionDB();
-            holi.connect();
-            //nombre = holi.buscarUsuario(cc);
-            holi.close();
-            System.out.println("Paciente: " + nombre);
-            System.out.println("\n-Ingrese sintoma 1");
-            sintoma1 = entrada.next();
-            System.out.println("\n-Ingrese sintoma 2");
-            sintoma2 = entrada.next();
-            System.out.println("\n-Ingrese sintoma 3");
-            sintoma3 = entrada.next();
+            
         } else if (k == 3) {
             menu++;
             option = "Solicitar notificación";
             System.out.println("\n-Ingrese datos");
             System.out.println("\n-Identificacion");
             cc = entrada.next();
-//        }
-//        else if(k==4){
-//            menu++;
-//            option = "Agregar Patología";
-//            System.out.println("Ingrese los siguientes datos");
-//            System.out.println("\n-Nombre");
-//            nombre=entrada.next();
-//            System.out.println("\n-Sintoma 1");
-//            sintoma1=entrada.next();
-//            System.out.println("\n-Sintoma 2");
-//            sintoma2=entrada.next();
-//            System.out.println("\n-Sintoma 3");
-//            sintoma3=entrada.next();
-//        }else if(k==5){
-//            menu++;
-//            option = "Editar Patología";
-//            System.out.println("Ingrese los siguientes datos");
-//            System.out.println("\n-Nombre");
-//            nombre=entrada.next();
-//            System.out.println("\n-Sintoma 1");
-//            sintoma1=entrada.next();
-//            System.out.println("\n-Sintoma 2");
-//            sintoma2=entrada.next();
-//            System.out.println("\n-Sintoma 3");
-//            sintoma3=entrada.next();
-//            ConexionDB holi = new ConexionDB();
-//            holi.connect();
-//            holi.editPatologia(nombre,sintoma1,sintoma2,sintoma3);
-//            System.out.println("Patología editada");
-//            holi.close();
-//            System.out.println("Conexión cerrada \n");
-//            holi.connect();
-//            holi.mostrarPatologia();
-//            holi.close();
-//            menu();
         } else {
             System.out.println("Opción invalida");
             menu();
