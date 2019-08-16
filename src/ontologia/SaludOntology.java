@@ -9,7 +9,7 @@ import jade.core.CaseInsensitiveString;
 
 /** file: SaludOntology.java
  * @author ontology bean generator
- * @version 2019/08/15, 09:58:39
+ * @version 2019/08/15, 22:51:46
  */
 public class SaludOntology extends jade.content.onto.Ontology  {
   //NAME
@@ -25,22 +25,36 @@ public class SaludOntology extends jade.content.onto.Ontology  {
    // VOCABULARY
     public static final String DIAGNOSTICODADO_DIAGNOSTICO="diagnostico";
     public static final String DIAGNOSTICODADO="DiagnosticoDado";
+    public static final String PATOLOGIAMODIFICADA_PATOLOGIA="patologia";
+    public static final String PATOLOGIAMODIFICADA="PatologiaModificada";
     public static final String USUARIOCREADO_USUARIO="usuario";
     public static final String USUARIOCREADO="UsuarioCreado";
     public static final String DIAGNOSTICOCREADO_DIAGNOSTICO="diagnostico";
     public static final String DIAGNOSTICOCREADO="DiagnosticoCreado";
     public static final String USUARIOENCONTRADO_USUARIO="usuario";
     public static final String USUARIOENCONTRADO="UsuarioEncontrado";
+    public static final String PATOLOGIACREADA_PATOLOGIA="patologia";
+    public static final String PATOLOGIACREADA="PatologiaCreada";
     public static final String USUARIOABUSCAR_USUARIO="usuario";
     public static final String USUARIOABUSCAR="UsuarioABuscar";
+    public static final String PATOLOGIASCREADAS_PATOLOGIAS="patologias";
+    public static final String PATOLOGIASCREADAS="PatologiasCreadas";
     public static final String DIAGNOSTICO_SINTOMA3="sintoma3";
     public static final String DIAGNOSTICO_SINTOMA1="sintoma1";
     public static final String DIAGNOSTICO_SINTOMA2="sintoma2";
-    public static final String DIAGNOSTICO_PATOLOGIA="patologia";
+    public static final String DIAGNOSTICO_NOMBREPATOLOGIA="nombrePatologia";
     public static final String DIAGNOSTICO="Diagnostico";
+    public static final String PATOLOGIA_ID="id";
+    public static final String PATOLOGIA_SINTOMA3="sintoma3";
+    public static final String PATOLOGIA_SINTOMA1="sintoma1";
+    public static final String PATOLOGIA_NOMBRE="nombre";
+    public static final String PATOLOGIA_SINTOMA2="sintoma2";
+    public static final String PATOLOGIA="Patologia";
     public static final String USUARIO_NOMBRE="nombre";
     public static final String USUARIO_IDENTIFICACION="identificacion";
     public static final String USUARIO="Usuario";
+    public static final String PATOLOGIAS_LISTAPATOLOGIAS="listaPatologias";
+    public static final String PATOLOGIAS="Patologias";
 
   /**
    * Constructor
@@ -50,8 +64,12 @@ public class SaludOntology extends jade.content.onto.Ontology  {
     try { 
 
     // adding Concept(s)
+    ConceptSchema patologiasSchema = new ConceptSchema(PATOLOGIAS);
+    add(patologiasSchema, ontologia.Patologias.class);
     ConceptSchema usuarioSchema = new ConceptSchema(USUARIO);
     add(usuarioSchema, ontologia.Usuario.class);
+    ConceptSchema patologiaSchema = new ConceptSchema(PATOLOGIA);
+    add(patologiaSchema, ontologia.Patologia.class);
     ConceptSchema diagnosticoSchema = new ConceptSchema(DIAGNOSTICO);
     add(diagnosticoSchema, ontologia.Diagnostico.class);
 
@@ -60,29 +78,44 @@ public class SaludOntology extends jade.content.onto.Ontology  {
     // adding AID(s)
 
     // adding Predicate(s)
+    PredicateSchema patologiasCreadasSchema = new PredicateSchema(PATOLOGIASCREADAS);
+    add(patologiasCreadasSchema, ontologia.PatologiasCreadas.class);
     PredicateSchema usuarioABuscarSchema = new PredicateSchema(USUARIOABUSCAR);
     add(usuarioABuscarSchema, ontologia.UsuarioABuscar.class);
+    PredicateSchema patologiaCreadaSchema = new PredicateSchema(PATOLOGIACREADA);
+    add(patologiaCreadaSchema, ontologia.PatologiaCreada.class);
     PredicateSchema usuarioEncontradoSchema = new PredicateSchema(USUARIOENCONTRADO);
     add(usuarioEncontradoSchema, ontologia.UsuarioEncontrado.class);
     PredicateSchema diagnosticoCreadoSchema = new PredicateSchema(DIAGNOSTICOCREADO);
     add(diagnosticoCreadoSchema, ontologia.DiagnosticoCreado.class);
     PredicateSchema usuarioCreadoSchema = new PredicateSchema(USUARIOCREADO);
     add(usuarioCreadoSchema, ontologia.UsuarioCreado.class);
+    PredicateSchema patologiaModificadaSchema = new PredicateSchema(PATOLOGIAMODIFICADA);
+    add(patologiaModificadaSchema, ontologia.PatologiaModificada.class);
     PredicateSchema diagnosticoDadoSchema = new PredicateSchema(DIAGNOSTICODADO);
     add(diagnosticoDadoSchema, ontologia.DiagnosticoDado.class);
 
 
     // adding fields
+    patologiasSchema.add(PATOLOGIAS_LISTAPATOLOGIAS, patologiaSchema, 0, ObjectSchema.UNLIMITED);
     usuarioSchema.add(USUARIO_IDENTIFICACION, (TermSchema)getSchema(BasicOntology.INTEGER), ObjectSchema.OPTIONAL);
     usuarioSchema.add(USUARIO_NOMBRE, (TermSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
-    diagnosticoSchema.add(DIAGNOSTICO_PATOLOGIA, (TermSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+    patologiaSchema.add(PATOLOGIA_SINTOMA2, (TermSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+    patologiaSchema.add(PATOLOGIA_NOMBRE, (TermSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+    patologiaSchema.add(PATOLOGIA_SINTOMA1, (TermSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+    patologiaSchema.add(PATOLOGIA_SINTOMA3, (TermSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+    patologiaSchema.add(PATOLOGIA_ID, (TermSchema)getSchema(BasicOntology.INTEGER), ObjectSchema.OPTIONAL);
+    diagnosticoSchema.add(DIAGNOSTICO_NOMBREPATOLOGIA, (TermSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
     diagnosticoSchema.add(DIAGNOSTICO_SINTOMA2, (TermSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
     diagnosticoSchema.add(DIAGNOSTICO_SINTOMA1, (TermSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
     diagnosticoSchema.add(DIAGNOSTICO_SINTOMA3, (TermSchema)getSchema(BasicOntology.STRING), ObjectSchema.OPTIONAL);
+    patologiasCreadasSchema.add(PATOLOGIASCREADAS_PATOLOGIAS, patologiasSchema, ObjectSchema.OPTIONAL);
     usuarioABuscarSchema.add(USUARIOABUSCAR_USUARIO, usuarioSchema, ObjectSchema.OPTIONAL);
+    patologiaCreadaSchema.add(PATOLOGIACREADA_PATOLOGIA, patologiaSchema, ObjectSchema.OPTIONAL);
     usuarioEncontradoSchema.add(USUARIOENCONTRADO_USUARIO, usuarioSchema, ObjectSchema.OPTIONAL);
     diagnosticoCreadoSchema.add(DIAGNOSTICOCREADO_DIAGNOSTICO, diagnosticoSchema, ObjectSchema.OPTIONAL);
     usuarioCreadoSchema.add(USUARIOCREADO_USUARIO, usuarioSchema, ObjectSchema.OPTIONAL);
+    patologiaModificadaSchema.add(PATOLOGIAMODIFICADA_PATOLOGIA, patologiaSchema, ObjectSchema.OPTIONAL);
     diagnosticoDadoSchema.add(DIAGNOSTICODADO_DIAGNOSTICO, diagnosticoSchema, ObjectSchema.OPTIONAL);
 
     // adding name mappings

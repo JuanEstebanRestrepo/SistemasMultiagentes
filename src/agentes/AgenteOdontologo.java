@@ -205,44 +205,7 @@ public class AgenteOdontologo extends Agent {
             if (msg != null) {
                 System.out.println("NOTIFICACIÓN ENVIADA!!!");
 
-                AgenteUsuario.menu();
                 myAgent.addBehaviour(new EsperarSolicitudNotificacion());
-            } else {
-                block();
-            }
-        }
-    }
-
-    private class EsperarSolicitudDiagnostico extends CyclicBehaviour {
-
-        @Override
-        public void action() {
-
-            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.AGREE);
-            ACLMessage msg = myAgent.receive(mt);
-            if (msg != null) {
-                //Recuperación del nombre de la patología
-                String ident = msg.getContent();
-                System.out.println("\n EL AGENTE ESTA ENCARGADO DE SOLICITAR DIAGNÓSTICO PARA LOS SINTOMAS: " + ident + "\n \n");
-                ACLMessage reply = msg.createReply();
-
-                String[] sintomas = ident.split(",");
-
-                ConexionDB holo = new ConexionDB();
-                holo.connect();
-//                String nombre = holo.buscarPatologia(sintomas[0], sintomas[1], sintomas[2]);
-                holo.close();
-                /*
-                if (nombre != null) {
-                    reply.setPerformative(ACLMessage.PROPOSE);
-                    reply.setContent(nombre);
-                } else {
-                    reply.setPerformative(ACLMessage.REFUSE);
-                    System.out.println("Diagnóstico no hencontrado");
-                    reply.setContent("Diagnóstico no encontrado");
-                }
-                 */
-                myAgent.send(reply);
             } else {
                 block();
             }

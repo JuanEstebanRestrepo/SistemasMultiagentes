@@ -4,7 +4,13 @@
  * and open the template in the editor.
  */
 package agentes;
+
 import DataBase.*;
+import jade.content.ContentElement;
+import jade.content.lang.Codec;
+import jade.content.lang.sl.SLCodec;
+import jade.content.onto.Ontology;
+import jade.content.onto.OntologyException;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.*;
@@ -14,14 +20,22 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.util.leap.List;
 import java.util.Hashtable;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import ontologia.*;
 
 /**
  *
  * @author EQUIPO
  */
-public class AgenteExperto extends Agent{
+public class AgenteExperto extends Agent {
+
+    ConexionDB baseDatos = new ConexionDB();
+    private final Codec codec = new SLCodec();
+    private final Ontology ontologia = SaludOntology.getInstance();
 
     @Override
     protected void setup() {
@@ -40,31 +54,92 @@ public class AgenteExperto extends Agent{
         } catch (FIPAException e) {
             e.printStackTrace();
         }
-
+        getContentManager().registerLanguage(codec);
+        getContentManager().registerOntology(ontologia);
         //Agregar comportamientos 
-        this.addBehaviour(new EsperarSolicitudPatologia());
+        this.addBehaviour(new ProtocoloUsuario());
+        this.addBehaviour(new EnviarPatologias());
     }
-    
-    private class EsperarSolicitudPatologia extends CyclicBehaviour {
+
+    private class EnviarPatologias extends CyclicBehaviour {
 
         @Override
         public void action() {
-
-            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM_IF);
+            AID id = new AID();
+            id.setLocalName("AgenteUsuario");
+            MessageTemplate mt = MessageTemplate.and(
+                    MessageTemplate.MatchSender(id),
+                    MessageTemplate.MatchContent("patologias"));
             ACLMessage msg = myAgent.receive(mt);
             if (msg != null) {
-                String[] sintomas = msg.getContent().split(",");
-                ConexionDB holi = new ConexionDB();
-                holi.connect();
-                holi.savePatologia(sintomas[0],sintomas[1],sintomas[2],sintomas[3]);
-                System.out.println("Patología agregada");
-                holi.close();
-                System.out.println("Conexión cerrada \n");
-                holi.connect();
-                holi.mostrarPatologia();
-                holi.close();
-                 ACLMessage reply = msg.createReply();
-                 myAgent.send(reply);
+                try {
+                    List listaPatologias = baseDatos.listaPatologias();
+                    Patologias patologias = new Patologias();
+                    patologias.setListaPatologias(listaPatologias);
+                    PatologiasCreadas patologiasCreadas = new PatologiasCreadas();
+                    patologiasCreadas.setPatologias(patologias);
+                    ACLMessage mensaje = new ACLMessage();
+                    mensaje.addReceiver(id);
+                    mensaje.setLanguage(codec.getName());
+                    mensaje.setOntology(ontologia.getName());
+                    mensaje.setPerformative(ACLMessage.INFORM);
+                    getContentManager().fillContent(mensaje, patologiasCreadas);
+                    this.myAgent.send(mensaje);
+                } catch (Codec.CodecException ex) {
+                    Logger.getLogger(AgenteExperto.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (OntologyException ex) {
+                    Logger.getLogger(AgenteExperto.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+    }
+
+    private class GuardarPatologia extends OneShotBehaviour {
+
+        private Patologia patologia;
+
+        public GuardarPatologia(Patologia patologia) {
+            this.patologia = patologia;
+        }
+
+        @Override
+        public void action() {
+            baseDatos.savePatologia(patologia);
+            AID id = new AID();
+            id.setLocalName("AgenteUsuario");
+            ACLMessage mensaje = new ACLMessage();
+            mensaje.addReceiver(id);
+            mensaje.setContent("patologia creada");
+            this.myAgent.send(mensaje);
+        }
+    }
+
+    private class ProtocoloUsuario extends CyclicBehaviour {
+
+        @Override
+        public void action() {
+            AID id = new AID();
+            id.setLocalName("AgenteUsuario");
+            MessageTemplate mt = MessageTemplate.and(
+                    MessageTemplate.MatchSender(id),
+                    MessageTemplate.MatchOntology(ontologia.getName()));
+            ACLMessage msg = myAgent.receive(mt);
+            if (msg != null) {
+                try {
+                    ContentElement ce = getContentManager().extractContent(msg);
+                    if (ce instanceof PatologiaCreada) {
+                        PatologiaCreada patologiaCreada = (PatologiaCreada) ce;
+                        Patologia patologia = patologiaCreada.getPatologia();
+                        this.myAgent.addBehaviour(new GuardarPatologia(patologia));
+                    } else if(ce instanceof PatologiaCreada) {
+                        PatologiaCreada patologiaCreada = (PatologiaCreada) ce;
+                        Patologia patologia = patologiaCreada.getPatologia();
+                    }
+                } catch (Codec.CodecException ex) {
+                    Logger.getLogger(AgenteExperto.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (OntologyException ex) {
+                    Logger.getLogger(AgenteExperto.class.getName()).log(Level.SEVERE, null, ex);
+                }
             } else {
                 block();
             }

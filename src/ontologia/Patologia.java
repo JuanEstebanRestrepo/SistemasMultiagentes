@@ -6,22 +6,11 @@ import jade.util.leap.*;
 import jade.core.*;
 
 /**
-* Protege name: Diagnostico
+* Protege name: Patologia
 * @author ontology bean generator
 * @version 2019/08/15, 22:51:46
 */
-public class Diagnostico implements Concept {
-
-   /**
-* Protege name: nombrePatologia
-   */
-   private String nombrePatologia;
-   public void setNombrePatologia(String value) { 
-    this.nombrePatologia=value;
-   }
-   public String getNombrePatologia() {
-     return this.nombrePatologia;
-   }
+public class Patologia implements Concept {
 
    /**
 * Protege name: sintoma2
@@ -32,6 +21,17 @@ public class Diagnostico implements Concept {
    }
    public String getSintoma2() {
      return this.sintoma2;
+   }
+
+   /**
+* Protege name: nombre
+   */
+   private String nombre;
+   public void setNombre(String value) { 
+    this.nombre=value;
+   }
+   public String getNombre() {
+     return this.nombre;
    }
 
    /**
@@ -54,6 +54,17 @@ public class Diagnostico implements Concept {
    }
    public String getSintoma3() {
      return this.sintoma3;
+   }
+
+   /**
+* Protege name: id
+   */
+   private int id;
+   public void setId(int value) { 
+    this.id=value;
+   }
+   public int getId() {
+     return this.id;
    }
 
 }

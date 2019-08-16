@@ -5,7 +5,8 @@
  */
 package DataBase;
 
-import agentes.AgenteUsuario;
+import jade.util.leap.ArrayList;
+import jade.util.leap.List;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -95,14 +96,14 @@ public class ConexionDB {
         return usuario;
     }
 
-    public void savePatologia(String nombre, String x, String y, String z) {
+    public void savePatologia(Patologia patologia) {
         try {
-            PreparedStatement st = connect.prepareStatement("insert into patologias (nombre, sintoma1, sintoma2, sintoma3) values (?,?,?,?)");
-            st.setString(1, nombre);
-            st.setString(2, x);
-            st.setString(3, y);
-            st.setString(4, z);
-            st.execute();
+            connect();
+            String sql = "INSERT INTO patologias VALUES(NULL, '"+patologia.getNombre()
+                    + "','"+ patologia.getSintoma1() + "','" + patologia.getSintoma2()
+                    + "','" + patologia.getSintoma3()+"')";
+            consulta.execute(sql);
+            close();
         } catch (SQLException ex) {
             System.err.println(ex.getMessage());
         }
@@ -124,25 +125,26 @@ public class ConexionDB {
         }
     }
 
-    public void mostrarPatologia() {
-        ResultSet result = null;
+    public List listaPatologias() {
+        List lista = new ArrayList();
         try {
-            PreparedStatement st = connect.prepareStatement("select * from patologias");
-            result = st.executeQuery();
+            connect();
+            String sql = "SELECT * FROM patologias";
+            ResultSet result = consulta.executeQuery(sql);
             while (result.next()) {
-                System.out.print("ID: ");
-                System.out.println(result.getInt("id"));
-
-                System.out.print("Nombre: ");
-                System.out.println(result.getString("nombre"));
-
-                System.out.print("Sintomas: ");
-                System.out.println(result.getString("sintoma1") + ", " + result.getString("sintoma2") + ", " + result.getString("sintoma3"));
-                System.out.println("=======================");
+                Patologia patologia = new Patologia();
+                patologia.setId(Integer.parseInt(result.getString("id")));
+                patologia.setNombre(result.getString("nombre"));
+                patologia.setSintoma1(result.getString("sintoma1"));
+                patologia.setSintoma2(result.getString("sintoma2"));
+                patologia.setSintoma3(result.getString("sintoma3"));
+                lista.add(patologia);
             }
+            close();
         } catch (SQLException ex) {
             System.err.println(ex.getMessage());
         }
+        return lista;
     }
 
     public Object buscarPatologia(Diagnostico diagnostico) {
@@ -156,7 +158,7 @@ public class ConexionDB {
                     + diagnostico.getSintoma2()+ "','"+diagnostico.getSintoma3()+"')";
             ResultSet result = consulta.executeQuery(sql);
             while (result.next()) {
-                diagnostico.setPatologia(result.getString("nombre"));
+                diagnostico.setNombrePatologia(result.getString("nombre"));
                 return diagnostico;
 /*
                 if ((result.getString("sintoma1").equals(x) || result.getString("sintoma2").equals(x) || result.getString("sintoma3").equals(x))
