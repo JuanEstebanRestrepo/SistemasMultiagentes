@@ -5,6 +5,7 @@
         <group>
             <file>file:/home/johan/NetBeansProjects/SistemasMultiagentes/src/agentes/AgenteOdontologo.java</file>
             <file>file:/home/johan/NetBeansProjects/SistemasMultiagentes/src/agentes/AgenteUsuario.java</file>
+            <file>file:/home/johan/NetBeansProjects/SistemasMultiagentes/src/agentes/AgenteExperto.java</file>
             <file>file:/home/johan/NetBeansProjects/SistemasMultiagentes/src/DataBase/ConexionDB.java</file>
         </group>
     </open-files>

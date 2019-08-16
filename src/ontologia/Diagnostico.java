@@ -8,7 +8,7 @@ import jade.core.*;
 /**
 * Protege name: Diagnostico
 * @author ontology bean generator
-* @version 2019/08/15, 22:51:46
+* @version 2019/08/16, 09:20:08
 */
 public class Diagnostico implements Concept {
 
@@ -54,6 +54,17 @@ public class Diagnostico implements Concept {
    }
    public String getSintoma3() {
      return this.sintoma3;
+   }
+
+   /**
+* Protege name: tratamiento
+   */
+   private String tratamiento;
+   public void setTratamiento(String value) { 
+    this.tratamiento=value;
+   }
+   public String getTratamiento() {
+     return this.tratamiento;
    }
 
 }

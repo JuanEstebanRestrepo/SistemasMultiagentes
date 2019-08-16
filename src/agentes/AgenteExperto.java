@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package agentes;
 
 import DataBase.*;
@@ -21,8 +16,6 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.util.leap.List;
-import java.util.Hashtable;
-import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import ontologia.*;
@@ -49,10 +42,13 @@ public class AgenteExperto extends Agent {
             ServiceDescription sd = new ServiceDescription();
             sd.setType("experto");
             sd.setName("Agregar patología");
+            ServiceDescription sd1 = new ServiceDescription();
+            sd1.setType("experto");
+            sd1.setName("Editar patología");
             dfd.addServices(sd);
+            dfd.addServices(sd1);
             DFService.register(this, dfd);
         } catch (FIPAException e) {
-            e.printStackTrace();
         }
         getContentManager().registerLanguage(codec);
         getContentManager().registerOntology(ontologia);
@@ -96,7 +92,7 @@ public class AgenteExperto extends Agent {
 
     private class GuardarPatologia extends OneShotBehaviour {
 
-        private Patologia patologia;
+        private final Patologia patologia;
 
         public GuardarPatologia(Patologia patologia) {
             this.patologia = patologia;
@@ -109,6 +105,7 @@ public class AgenteExperto extends Agent {
             id.setLocalName("AgenteUsuario");
             ACLMessage mensaje = new ACLMessage();
             mensaje.addReceiver(id);
+            mensaje.setPerformative(ACLMessage.INFORM);
             mensaje.setContent("patologia creada");
             this.myAgent.send(mensaje);
         }
@@ -131,9 +128,15 @@ public class AgenteExperto extends Agent {
                         PatologiaCreada patologiaCreada = (PatologiaCreada) ce;
                         Patologia patologia = patologiaCreada.getPatologia();
                         this.myAgent.addBehaviour(new GuardarPatologia(patologia));
-                    } else if(ce instanceof PatologiaCreada) {
-                        PatologiaCreada patologiaCreada = (PatologiaCreada) ce;
-                        Patologia patologia = patologiaCreada.getPatologia();
+                    } else if (ce instanceof PatologiaModificada) {
+                        PatologiaModificada patologiaModificada = (PatologiaModificada) ce;
+                        Patologia patologia = patologiaModificada.getPatologia();
+                        baseDatos.editPatologia(patologia);
+                        ACLMessage mensaje = new ACLMessage();
+                        mensaje.addReceiver(id);
+                        mensaje.setPerformative(ACLMessage.INFORM);
+                        mensaje.setContent("patologia editada");
+                        this.myAgent.send(mensaje);
                     }
                 } catch (Codec.CodecException ex) {
                     Logger.getLogger(AgenteExperto.class.getName()).log(Level.SEVERE, null, ex);

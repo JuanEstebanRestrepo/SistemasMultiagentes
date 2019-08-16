@@ -8,7 +8,7 @@ import jade.core.*;
 /**
 * Protege name: PatologiaCreada
 * @author ontology bean generator
-* @version 2019/08/15, 22:51:46
+* @version 2019/08/16, 09:20:08
 */
 public class PatologiaCreada implements Predicate {
 

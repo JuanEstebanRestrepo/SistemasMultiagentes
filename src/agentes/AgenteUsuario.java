@@ -4,7 +4,6 @@
  */
 package agentes;
 
-import DataBase.ConexionDB;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.lang.sl.SLCodec;
@@ -14,7 +13,6 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
-import jade.core.behaviours.Behaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -38,11 +36,6 @@ public class AgenteUsuario extends Agent {
     private final Codec codec = new SLCodec();
     private final Ontology ontologia = SaludOntology.getInstance();
 
-    private String identificacion;
-    private static String nombre;
-    private static String sintoma1;
-    private static String sintoma2;
-    private static String sintoma3;
     DFAgentDescription[] resultados;
     DFAgentDescription[] resultado_usuario;
     static int menu = 0;
@@ -60,81 +53,86 @@ public class AgenteUsuario extends Agent {
             dfd.setName(getAID());
             ServiceDescription sd = new ServiceDescription();
             sd.setType("usuario");
-            sd.setName("Solicitar notificación");
+            sd.setName("Interactuar con el usuario");
             dfd.addServices(sd);
             DFService.register(this, dfd);
         } catch (FIPAException e) {
         }
-
-        this.addBehaviour(new Menu());
-        this.addBehaviour(new ProtocoloOdontologo());
-        this.addBehaviour(new ProtocoloExperto());
-        /*
-        //Recuperación de parametros de búsqueda
-        Object[] args = getArguments();
-        if (args != null && args.length > 0) {
-//            identificacion = (String) args[0];
-            identificacion = cc;
-        } else {
-            // Make the agent terminate immediately
-            System.out.println("EL AGENTE NO TIENE MISION");
-            doDelete();
-        }
-
         try {
-            Thread.sleep(100);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(AgenteUsuario.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        try {
-            buscarAgentesPorServicio();
+            buscarServicio();
         } catch (FIPAException ex) {
             Logger.getLogger(AgenteUsuario.class.getName()).log(Level.SEVERE, null, ex);
         }
-         */
+        this.addBehaviour(new Menu());
+        this.addBehaviour(new ProtocoloOdontologo());
+        this.addBehaviour(new ProtocoloExperto());
+
         getContentManager().registerLanguage(codec);
         getContentManager().registerOntology(ontologia);
 
-        //Agregar comportamientos
-        //this.addBehaviour(new SolicitarNotificacion());
     }
 
-    public void buscarAgentesPorServicio() throws FIPAException {
-        ServiceDescription servicio = new ServiceDescription();
-        servicio.setType("odontologo");
-        servicio.setName("Solicitar diagnóstico");
-
-        // Plantilla de descripción que busca el agente
+    public void buscarServicio() throws FIPAException {
         DFAgentDescription descripcion = new DFAgentDescription();
-
-        // Servicio que busca el agente
-        descripcion.addServices(servicio);
-
         // Todas las descripciones que encajan con la plantilla proporcionada en el DF
         resultados = DFService.search(this, descripcion);
-
         if (resultados.length == 0) {
-            System.out.println("Ningun agente ofrece el servicio Solicitar diagnóstico");
+            System.out.println("Ningun agente ofrece el servicio deseado");
+        } else {
+            for (int i = 0; i < resultados.length; ++i) {
+                System.out.println("El agente " + resultados[i].getName().getLocalName() + " ofrece los siguientes servicios:");
+                Iterator servicios = resultados[i].getAllServices();
+                int j = 1;
+                while (servicios.hasNext()) {
+                    ServiceDescription servicio = (ServiceDescription) servicios.next();
+                    System.out.println(j + "- " + servicio.getName());
+                    j++;
+                }
+            }
         }
+    }
 
-        servicio.setType("usuario");
-        servicio.setName("Solicitar notificación");
+    private class NoDiagnostico extends CyclicBehaviour {
 
-        // Servicio que busca el agente
-        descripcion.addServices(servicio);
+        @Override
+        public void action() {
+            AID id = new AID();
+            id.setLocalName("AgenteOdontologo");
+            MessageTemplate mt = MessageTemplate.and(
+                    MessageTemplate.MatchSender(id),
+                    MessageTemplate.MatchContent("no diagnostico"));
+            ACLMessage msg = myAgent.receive(mt);
+            if (msg != null) {
+                System.out.println("No se encontro un diagnostico con esos sintomas");
+                this.myAgent.addBehaviour(new Menu());
+            } else {
+                block();
+            }
+        }
+    }
 
-        // Todas las descripciones que encajan con la plantilla proporcionada en el DF
-        resultado_usuario = DFService.search(this, descripcion);
+    private class RespuestaEdicionPatologia extends CyclicBehaviour {
 
-        if (resultado_usuario.length == 0) {
-            System.out.println("Ningun agente ofrece el servicio Solicitar notificación");
+        @Override
+        public void action() {
+            AID id = new AID();
+            id.setLocalName("AgenteExperto");
+            MessageTemplate mt = MessageTemplate.and(
+                    MessageTemplate.MatchSender(id),
+                    MessageTemplate.MatchContent("patologia editada"));
+            ACLMessage msg = myAgent.receive(mt);
+            if (msg != null) {
+                System.out.println(msg.getContent());
+                this.myAgent.addBehaviour(new Menu());
+            } else {
+                block();
+            }
         }
     }
 
     private class EditarPatologia extends OneShotBehaviour {
 
-        private Patologias patologias;
+        private final Patologias patologias;
 
         private EditarPatologia(Patologias patologias) {
             this.patologias = patologias;
@@ -151,18 +149,21 @@ public class AgenteUsuario extends Agent {
                     System.out.println((i + 1) + ". " + get.getNombre());
                 }
                 int opcion = entrada.nextInt();
-                Patologia patologia = (Patologia) listaPatologias.get(opcion-1);
+                Patologia patologia = (Patologia) listaPatologias.get(opcion - 1);
                 System.out.println("Selecciono la patologia: " + patologia.getNombre());
                 System.out.println("Con los siguientes sintomas");
                 System.out.println(patologia.getSintoma1());
                 System.out.println(patologia.getSintoma2());
                 System.out.println(patologia.getSintoma3());
+                System.out.println("Tratamiento");
+                System.out.println(patologia.getTratamiento());
                 System.out.println("");
                 System.out.println("Que quiere editar?");
                 System.out.println("1. nombre");
                 System.out.println("2. sintoma 1");
                 System.out.println("3. sintoma 2");
                 System.out.println("4. sintoma 3");
+                System.out.println("5. tratamiento");
                 opcion = entrada.nextInt();
                 String nuevo;
                 switch (opcion) {
@@ -179,12 +180,17 @@ public class AgenteUsuario extends Agent {
                     case 3:
                         System.out.println("Ingrese el nuevo sintoma 2");
                         nuevo = buff.readLine();
-                        patologia.setSintoma1(nuevo);
+                        patologia.setSintoma2(nuevo);
                         break;
                     case 4:
                         System.out.println("Ingrese el nuevo sintoma 3");
                         nuevo = buff.readLine();
-                        patologia.setSintoma1(nuevo);
+                        patologia.setSintoma3(nuevo);
+                        break;
+                    case 5:
+                        System.out.println("Ingrese el nuevo tratamiento");
+                        nuevo = buff.readLine();
+                        patologia.setTratamiento(nuevo);
                         break;
                     default:
                         break;
@@ -200,7 +206,8 @@ public class AgenteUsuario extends Agent {
                 mensaje.setPerformative(ACLMessage.INFORM);
                 getContentManager().fillContent(mensaje, patologiaModificada);
                 this.myAgent.send(mensaje);
-                
+                this.myAgent.addBehaviour(new RespuestaEdicionPatologia());
+
             } catch (IOException ex) {
                 Logger.getLogger(AgenteUsuario.class.getName()).log(Level.SEVERE, null, ex);
             } catch (Codec.CodecException ex) {
@@ -219,6 +226,7 @@ public class AgenteUsuario extends Agent {
             id.setLocalName("AgenteExperto");
             ACLMessage mensaje = new ACLMessage();
             mensaje.addReceiver(id);
+            mensaje.setPerformative(ACLMessage.INFORM);
             mensaje.setContent("patologias");
             this.myAgent.send(mensaje);
         }
@@ -289,6 +297,9 @@ public class AgenteUsuario extends Agent {
                 System.out.println("Ingrese tercer sintoma");
                 entrada = buff.readLine();
                 patologia.setSintoma3(entrada);
+                System.out.println("Ingrese tratamiento");
+                entrada = buff.readLine();
+                patologia.setTratamiento(entrada);
                 PatologiaCreada patologiaCreada = new PatologiaCreada();
                 patologiaCreada.setPatologia(patologia);
                 ACLMessage mensaje = new ACLMessage();
@@ -345,6 +356,7 @@ public class AgenteUsuario extends Agent {
                 mensaje.setPerformative(ACLMessage.INFORM);
                 getContentManager().fillContent(mensaje, diagnosticoCreado);
                 this.myAgent.send(mensaje);
+                this.myAgent.addBehaviour(new NoDiagnostico());
             } catch (IOException ex) {
                 Logger.getLogger(AgenteUsuario.class.getName()).log(Level.SEVERE, null, ex);
             } catch (Codec.CodecException ex) {
@@ -377,6 +389,7 @@ public class AgenteUsuario extends Agent {
                         Diagnostico diagnostico = diagnosticoDado.getDiagnostico();
                         System.out.println("El diagnóstico según los sintomas ingresados es: "
                                 + diagnostico.getNombrePatologia());
+                        System.out.println("Tiene un tratamiento: " + diagnostico.getTratamiento());
                         this.myAgent.addBehaviour(new Menu());
                     }
                 } catch (Codec.CodecException ex) {
@@ -502,102 +515,6 @@ public class AgenteUsuario extends Agent {
                     break;
                 default:
                     break;
-            }
-        }
-    }
-
-    private class SolicitarNotificacion extends OneShotBehaviour {
-
-        @Override
-        public void action() {
-            System.out.println("El agente " + getAID().getName() + " ofrece los siguientes servicios:");
-            for (int i = 0; i < resultado_usuario.length; ++i) {
-                Iterator servicios = resultado_usuario[i].getAllServices();
-                int j = 1;
-                while (servicios.hasNext()) {
-                    ServiceDescription servicio = (ServiceDescription) servicios.next();
-                    System.out.println(j + "- " + servicio.getName());
-                    j++;
-                }
-            }
-
-            for (int i = 0; i < resultados.length; ++i) {
-                System.out.println("El agente " + resultados[i].getName() + " ofrece los siguientes servicios:");
-                Iterator servicios = resultados[i].getAllServices();
-                int j = 1;
-                while (servicios.hasNext()) {
-                    ServiceDescription servicio = (ServiceDescription) servicios.next();
-                    System.out.println(j + "- " + servicio.getName());
-                    j++;
-                }
-
-                //enviar mensaje de solicitud a cada uno de los agentes
-                System.out.println("enviar mensaje de busqueda");
-                ACLMessage pregunta = new ACLMessage();
-                pregunta.addReceiver(resultados[i].getName());
-                if (option.equals("Registrar usuario")) {
-
-                } else if (option.equals("Solicitar notificación")) {
-                    pregunta.setContent(identificacion);
-                    pregunta.addReceiver(new AID("Odontologo", AID.ISLOCALNAME));
-                    pregunta.setPerformative(ACLMessage.INFORM);
-                    send(pregunta);
-                    myAgent.addBehaviour(new EsperarNotificacion());
-                } else if (option.equals("Solicitar diagnóstico")) {
-                    pregunta.setContent(sintoma1 + "," + sintoma2 + "," + sintoma3);
-                    pregunta.setPerformative(ACLMessage.AGREE);
-                    send(pregunta);
-                    // myAgent.addBehaviour(new EsperarDiagnostico());
-                } else if (option.equals("Agregar Patología")) {
-                    pregunta.setContent(nombre + "," + sintoma1 + "," + sintoma2 + "," + sintoma3);
-                    pregunta.setPerformative(ACLMessage.INFORM_IF);
-                    send(pregunta);
-                    myAgent.addBehaviour(new EsperarNotificacionPatologia());
-                }
-            }
-        }
-    }
-
-    private class EsperarNotificacionPatologia extends CyclicBehaviour {
-
-        @Override
-        public void action() {
-
-            MessageTemplate cfp = MessageTemplate.MatchPerformative(ACLMessage.CFP);
-            ACLMessage msgcfp = myAgent.receive(cfp);
-            if (msgcfp != null) {
-                // CFP Message received. Process it
-                String valor = msgcfp.getContent();
-                System.out.println(valor);
-            } else {
-                block();
-            }
-        }
-    }
-
-    private class EsperarNotificacion extends CyclicBehaviour {
-
-        @Override
-        public void action() {
-
-            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
-            ACLMessage msg = myAgent.receive(mt);
-            if (msg != null) {
-                // CFP Message received. Process it
-                String valor = msg.getContent();
-                ACLMessage reply = msg.createReply();
-                System.out.println("\nEl nombre del paciente que estoy buscando es: " + valor);
-                System.out.println("El agente que lo atiende es: " + msg.getSender() + "\n");
-
-                System.out.println("RECIVIENDO NOTIFICACIÓN...");
-                reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-
-                myAgent.send(reply);
-                myAgent.doDelete();
-
-                AID user = new AID("Usuario", AID.ISLOCALNAME);
-            } else {
-                block();
             }
         }
     }

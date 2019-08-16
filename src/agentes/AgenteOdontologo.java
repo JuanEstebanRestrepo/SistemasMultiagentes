@@ -50,10 +50,6 @@ public class AgenteOdontologo extends Agent {
 
         //Agregar comportamientos 
         this.addBehaviour(new ProtocoloUsuario());
-        //this.addBehaviour(new RegistrarUsuario());
-        //this.addBehaviour(new EsperarSolicitudNotificacion());
-        //this.addBehaviour(new EsperarConfirmacion());
-        //this.addBehaviour(new EsperarSolicitudDiagnostico());
     }
 
     private class DarDiagnostico extends OneShotBehaviour {
@@ -72,13 +68,15 @@ public class AgenteOdontologo extends Agent {
                 AID id = new AID();
                 id.setLocalName("AgenteUsuario");
                 mensaje.addReceiver(id);
-                mensaje.setLanguage(codec.getName());
-                mensaje.setOntology(ontologia.getName());
                 mensaje.setPerformative(ACLMessage.INFORM);
                 if (diagnostico != null) {
+                    mensaje.setLanguage(codec.getName());
+                    mensaje.setOntology(ontologia.getName());
                     DiagnosticoDado diagnosticoDado = new DiagnosticoDado();
                     diagnosticoDado.setDiagnostico(diagnostico);
                     getContentManager().fillContent(mensaje, diagnosticoDado);
+                } else {
+                    mensaje.setContent("no diagnostico");
                 }
                 this.myAgent.send(mensaje);
             } catch (Codec.CodecException ex) {
@@ -157,57 +155,6 @@ public class AgenteOdontologo extends Agent {
                 } catch (OntologyException ex) {
                     Logger.getLogger(AgenteOdontologo.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            }
-        }
-    }
-
-    private class EsperarSolicitudNotificacion extends CyclicBehaviour {
-
-        @Override
-        public void action() {
-
-            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
-            ACLMessage msg = myAgent.receive(mt);
-            if (msg != null) {
-                //Recuperación del nombre del paciente
-                String ident = msg.getContent();
-                System.out.println("\n EL AGENTE ESTA ENCARGADO DE SOLICITAR NOTIFICACIONES DEL PACIENTE CON IDENTIFICACIÓN: " + ident + "\n \n");
-                ACLMessage reply = msg.createReply();
-//                String ide = (String) listaPacientes.get(ident);
-                ConexionDB holo = new ConexionDB();
-                holo.connect();
-                // String ide = holo.buscarUsuario(1);
-                holo.close();
-                /*
-                if (ide != null) {
-                    reply.setPerformative(ACLMessage.PROPOSE);
-                    reply.setContent(ide);
-                } else {
-                    reply.setPerformative(ACLMessage.REFUSE);
-                    System.out.println("paciente no encontrado");
-                    reply.setContent("paciente no encontrado");
-                }
-                 */
-                myAgent.send(reply);
-            } else {
-                block();
-            }
-        }
-    }
-
-    private class EsperarConfirmacion extends CyclicBehaviour {
-
-        @Override
-        public void action() {
-
-            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
-            ACLMessage msg = myAgent.receive(mt);
-            if (msg != null) {
-                System.out.println("NOTIFICACIÓN ENVIADA!!!");
-
-                myAgent.addBehaviour(new EsperarSolicitudNotificacion());
-            } else {
-                block();
             }
         }
     }

@@ -8,7 +8,7 @@ import jade.core.*;
 /**
 * Protege name: Patologia
 * @author ontology bean generator
-* @version 2019/08/15, 22:51:46
+* @version 2019/08/16, 09:20:08
 */
 public class Patologia implements Concept {
 
@@ -24,6 +24,17 @@ public class Patologia implements Concept {
    }
 
    /**
+* Protege name: sintoma1
+   */
+   private String sintoma1;
+   public void setSintoma1(String value) { 
+    this.sintoma1=value;
+   }
+   public String getSintoma1() {
+     return this.sintoma1;
+   }
+
+   /**
 * Protege name: nombre
    */
    private String nombre;
@@ -35,14 +46,14 @@ public class Patologia implements Concept {
    }
 
    /**
-* Protege name: sintoma1
+* Protege name: id
    */
-   private String sintoma1;
-   public void setSintoma1(String value) { 
-    this.sintoma1=value;
+   private int id;
+   public void setId(int value) { 
+    this.id=value;
    }
-   public String getSintoma1() {
-     return this.sintoma1;
+   public int getId() {
+     return this.id;
    }
 
    /**
@@ -57,14 +68,14 @@ public class Patologia implements Concept {
    }
 
    /**
-* Protege name: id
+* Protege name: tratamiento
    */
-   private int id;
-   public void setId(int value) { 
-    this.id=value;
+   private String tratamiento;
+   public void setTratamiento(String value) { 
+    this.tratamiento=value;
    }
-   public int getId() {
-     return this.id;
+   public String getTratamiento() {
+     return this.tratamiento;
    }
 
 }
